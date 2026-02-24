@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: finannce-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python tg_bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
+    # ВАЖНО: фиксируем версию Python
+    runtime: python-3.12.8
