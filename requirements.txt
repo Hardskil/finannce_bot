@@ -1,0 +1,4 @@
+python-telegram-bot==21.6
+openpyxl
+python-dotenv
+requests
