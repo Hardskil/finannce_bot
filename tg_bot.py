@@ -24,7 +24,7 @@ ENV
   Create .env next to this file:
     BOT_TOKEN=123456:ABC...
 """
-
+import asyncio
 import os
 import re
 import csv
@@ -405,6 +405,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # ---------------- MAIN ----------------
 # ---------------- MAIN ----------------
+# ---------------- MAIN ----------------
 def main():
     load_dotenv()
     token = os.getenv("BOT_TOKEN")
@@ -414,23 +415,33 @@ def main():
     ensure_excel()
 
     app = Application.builder().token(token).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("sync", sync))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_error_handler(error_handler)
 
     print("Bot is running...")
-    
+
     webhook_url = os.environ.get("WEBHOOK_URL")
 
     if webhook_url:
         port = int(os.environ.get("PORT", 8000))
-        app.run_webhook(
-            listen="0.0.0.0",
-            port=port,
-            webhook_url=webhook_url,
-        )
+
+        async def _run():
+            # set webhook + start server
+            await app.bot.set_webhook(webhook_url)
+            await app.initialize()
+            await app.start()
+            await app.updater.start_webhook(
+                listen="0.0.0.0",
+                port=port,
+                url_path="",   # можно оставить пустым
+                webhook_url=webhook_url,
+            )
+            # держим процесс живым
+            await asyncio.Event().wait()
+
+        asyncio.run(_run())
     else:
         app.run_polling()
 
