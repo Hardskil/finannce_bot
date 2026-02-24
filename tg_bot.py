@@ -404,26 +404,35 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.exception("Exception while handling an update: %s", context.error)
 
 # ---------------- MAIN ----------------
+# ---------------- MAIN ----------------
 def main():
     load_dotenv()
     token = os.getenv("BOT_TOKEN")
     if not token:
-        raise RuntimeError("Не найден BOT_TOKEN. Создай файл .env рядом с tg_bot.py и добавь BOT_TOKEN=...")
+        raise RuntimeError("Не найден BOT_TOKEN. Добавь BOT_TOKEN в .env или переменные окружения.")
 
     ensure_excel()
 
     app = Application.builder().token(token).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("sync", sync))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     app.add_error_handler(error_handler)
 
-    port = int(os.environ.get("PORT", 8000))
-    app.run_webhook(
-    listen="0.0.0.0",
-    port=port,
-    webhook_url=os.environ.get("WEBHOOK_URL")
-)
+    print("Bot is running...")
+    
+    webhook_url = os.environ.get("WEBHOOK_URL")
+
+    if webhook_url:
+        port = int(os.environ.get("PORT", 8000))
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=port,
+            webhook_url=webhook_url,
+        )
+    else:
+        app.run_polling()
 
 if __name__ == "__main__":
     main()
